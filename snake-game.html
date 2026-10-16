@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b1220">
+<title>贪吃蛇 · Snake Arcade</title>
+<style>
+:root{--bg:#0b1220;--panel:#111c2f;--panel2:#17243a;--line:#263650;--text:#eef6ff;--muted:#8ea3bf;--green:#7cf29a;--green2:#35d477;--yellow:#ffd166;--red:#ff6b7a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(ellipse at top,#172b43 0,#0b1220 58%);color:var(--text)}
+body{padding:22px 14px 32px;display:flex;justify-content:center}.app{width:min(100%,560px)}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{display:flex;align-items:center;gap:11px}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#a5ffb6,#32c975);display:grid;place-items:center;color:#082216;font-size:25px;box-shadow:0 8px 24px #35d47730}.eyebrow{font-size:11px;color:var(--green);letter-spacing:2px;font-weight:800}.title{font-size:23px;font-weight:900;letter-spacing:.3px;margin-top:1px}.badge{font-size:11px;color:#b6c6dc;border:1px solid #31435c;border-radius:99px;padding:7px 10px;background:#142137}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.stat{background:#111c2fdd;border:1px solid var(--line);border-radius:15px;padding:12px 14px}.stat-label{font-size:11px;color:var(--muted);margin-bottom:5px}.stat-value{font-size:23px;font-weight:850;line-height:1.1}.stat-value small{font-size:12px;color:var(--muted);font-weight:600}
+.game-card{background:#111c2f;border:1px solid var(--line);border-radius:20px;padding:12px;box-shadow:0 20px 55px #0003}.canvas-wrap{position:relative;width:100%;overflow:hidden;border-radius:13px;background:#0b1525;touch-action:none}canvas{display:block;width:100%;height:auto;aspect-ratio:1/1}.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#07101dcc;backdrop-filter:blur(3px);text-align:center;padding:24px}.overlay.hidden{display:none}.overlay-box h2{font-size:25px;margin:0 0 8px}.overlay-box p{color:#a6b8cf;font-size:13px;line-height:1.6;margin:0 0 18px}.primary{border:0;border-radius:12px;padding:12px 22px;background:linear-gradient(135deg,#a5ffb6,#35d477);color:#082216;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 7px 20px #35d47725}.primary:active{transform:scale(.98)}
+.controls{display:flex;gap:9px;margin-top:12px}.controls button,.select{border:1px solid #2b3b54;border-radius:11px;background:#17243a;color:#e7f0fb;padding:11px 12px;font-weight:750;font-size:13px;cursor:pointer}.controls button{flex:1}.controls button:hover,.select:hover{background:#20334d}.controls .main-action{background:#1c3d32;border-color:#2b6b4b;color:#9af5b1}
+.settings{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}.setting-label{font-size:12px;color:var(--muted)}.select{padding:9px 12px;outline:none}
+.dpad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,48px);gap:6px;justify-content:center;margin:18px auto 3px;user-select:none}.dpad button{border:1px solid #2b3d57;border-radius:13px;background:#17243a;color:#e8f2ff;font-size:20px;font-weight:800;touch-action:manipulation}.dpad button:active{background:#2a4a61;transform:scale(.96)}.dpad .up{grid-column:2;grid-row:1}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}
+.tip{text-align:center;font-size:11px;color:#7187a5;margin-top:14px;line-height:1.6}.footer{display:flex;justify-content:center;gap:7px;align-items:center;margin-top:18px;color:#7187a5;font-size:11px}.dot{width:5px;height:5px;background:var(--green2);border-radius:50%}
+@media(min-width:500px){body{padding-top:32px}.game-card{padding:15px}.dpad{display:none}.title{font-size:26px}}
+</style>
+</head>
+<body>
+<main class="app">
+<header><div class="brand"><div class="logo">蛇</div><div><div class="eyebrow">SNAKE ARCADE</div><div class="title">贪吃蛇大作战</div></div></div><div class="badge">✦ 离线畅玩</div></header>
+<section class="stats">
+ <div class="stat"><div class="stat-label">当前得分</div><div class="stat-value" id="score">0</div></div>
+ <div class="stat"><div class="stat-label">历史最高</div><div class="stat-value" id="best">0</div></div>
+ <div class="stat"><div class="stat-label">蛇身长度</div><div class="stat-value" id="length">3 <small>节</small></div></div>
+</section>
+<section class="game-card">
+ <div class="canvas-wrap" id="boardWrap">
+  <canvas id="board" width="480" height="480" aria-label="贪吃蛇游戏区域"></canvas>
+  <div class="overlay" id="overlay"><div class="overlay-box"><h2 id="overlayTitle">准备好了吗？</h2><p id="overlayText">吃掉绿色食物，努力拿高分。<br>别撞墙，也别咬到自己！</p><button class="primary" id="startBtn">开始游戏　▶</button></div></div>
+ </div>
+ <div class="controls"><button class="main-action" id="pauseBtn">Ⅱ　暂停</button><button id="restartBtn">↻　重新开始</button></div>
+ <div class="settings"><span class="setting-label">游戏难度</span><select class="select" id="speed"><option value="150">悠闲模式</option><option value="115" selected>标准模式</option><option value="82">极速挑战</option></select></div>
+ <div class="dpad" aria-label="方向控制"><button class="up" data-dir="up">▲</button><button class="left" data-dir="left">◀</button><button class="down" data-dir="down">▼</button><button class="right" data-dir="right">▶</button></div>
+</section>
+<div class="tip">电脑：使用方向键或 WASD　·　手机：点击方向按钮或在棋盘上滑动</div>
+<div class="footer"><span class="dot"></span>无需安装 · 自动保存最高分 · 支持手机与电脑</div>
+</main>
+<script>
+(() => {
+const canvas=document.getElementById('board'),ctx=canvas.getContext('2d');
+const N=24, CELL=canvas.width/N;
+const scoreEl=document.getElementById('score'),bestEl=document.getElementById('best'),lengthEl=document.getElementById('length');
+const overlay=document.getElementById('overlay'),overlayTitle=document.getElementById('overlayTitle'),overlayText=document.getElementById('overlayText');
+const startBtn=document.getElementById('startBtn'),pauseBtn=document.getElementById('pauseBtn'),restartBtn=document.getElementById('restartBtn'),speedSelect=document.getElementById('speed');
+let snake,food,dir,nextDir,score,best=Number(localStorage.getItem('snakeBest')||0),timer=null,running=false,started=false,dead=false;
+bestEl.textContent=best;
+function reset(){clearInterval(timer);timer=null;snake=[{x:8,y:12},{x:7,y:12},{x:6,y:12}];dir={x:1,y:0};nextDir={x:1,y:0};score=0;running=false;started=false;dead=false;food=spawnFood();updateStats();draw();showOverlay('准备好了吗？','吃掉绿色食物，努力拿高分。<br>别撞墙，也别咬到自己！','开始游戏　▶');pauseBtn.textContent='Ⅱ　暂停';}
+function spawnFood(){let p;do{p={x:Math.floor(Math.random()*N),y:Math.floor(Math.random()*N)}}while(snake&&snake.some(s=>s.x===p.x&&s.y===p.y));return p}
+function updateStats(){scoreEl.textContent=score;bestEl.textContent=best;lengthEl.innerHTML=snake.length+' <small>节</small>'}
+function showOverlay(title,txt,button){overlayTitle.textContent=title;overlayText.innerHTML=txt;startBtn.textContent=button;overlay.classList.remove('hidden')}
+function hideOverlay(){overlay.classList.add('hidden')}
+function draw(){ctx.clearRect(0,0,480,480);ctx.fillStyle='#0b1525';ctx.fillRect(0,0,480,480);
+ ctx.strokeStyle='rgba(130,164,200,.075)';ctx.lineWidth=1;for(let i=0;i<=N;i++){ctx.beginPath();ctx.moveTo(i*CELL,0);ctx.lineTo(i*CELL,480);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*CELL);ctx.lineTo(480,i*CELL);ctx.stroke()}
+ // food glow
+ const fx=(food.x+.5)*CELL,fy=(food.y+.5)*CELL;ctx.save();ctx.shadowColor='#ff667a';ctx.shadowBlur=18;ctx.fillStyle='#ff667a';ctx.beginPath();ctx.arc(fx,fy,CELL*.31,0,Math.PI*2);ctx.fill();ctx.restore();ctx.fillStyle='#ffd6dc';ctx.beginPath();ctx.arc(fx-2,fy-2,CELL*.09,0,Math.PI*2);ctx.fill();
+ snake.forEach((s,i)=>{let pad=2.2;const x=s.x*CELL+pad,y=s.y*CELL+pad,w=CELL-pad*2;ctx.fillStyle=i===0?'#a5ffb6':`hsl(${143-i*2}, 67%, ${Math.max(40,62-i*.4)}%)`;roundRect(ctx,x,y,w,w,i===0?6:4);ctx.fill();if(i===0){ctx.fillStyle='#0b3924';let ex=x+w*.68,ey=y+w*.32;if(dir.x===-1){ex=x+w*.3;ey=y+w*.32}if(dir.y===1){ex=x+w*.32;ey=y+w*.68}if(dir.y===-1){ex=x+w*.32;ey=y+w*.3}ctx.beginPath();ctx.arc(ex,ey,2.1,0,Math.PI*2);ctx.arc(ex+(dir.y===0?0: w*.36),ey+(dir.x===0?0:w*.36),2.1,0,Math.PI*2);ctx.fill()}});
+}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function start(){if(dead)reset();if(running)return;running=true;started=true;hideOverlay();pauseBtn.textContent='Ⅱ　暂停';clearInterval(timer);timer=setInterval(tick,Number(speedSelect.value));}
+function pause(){if(!started||dead){start();return}if(running){running=false;clearInterval(timer);timer=null;pauseBtn.textContent='▶　继续';showOverlay('游戏已暂停','休息一下，准备好后继续。','继续游戏　▶')}else start()}
+function tick(){dir=nextDir;const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};if(head.x<0||head.x>=N||head.y<0||head.y>=N||snake.some((s,i)=>i<snake.length-1&&s.x===head.x&&s.y===head.y)){gameOver();return}snake.unshift(head);if(head.x===food.x&&head.y===food.y){score+=10;if(score>best){best=score;localStorage.setItem('snakeBest',best)}food=spawnFood()}else snake.pop();updateStats();draw()}
+function gameOver(){running=false;dead=true;clearInterval(timer);timer=null;pauseBtn.textContent='Ⅱ　暂停';showOverlay('游戏结束！',`本局得分 <b style="color:#a5ffb6">${score}</b><br>${score>=best&&score>0?'太棒了！刷新你的纪录！':'再来一局，挑战更高分！'}`,'再玩一次　↻');}
+function setDirection(d){const map={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};const v=map[d];if(!v)return;if(v.x===-dir.x&&v.y===-dir.y)return;nextDir=v;if(!started&&!dead)start()}
+startBtn.addEventListener('click',start);pauseBtn.addEventListener('click',pause);restartBtn.addEventListener('click',reset);
+speedSelect.addEventListener('change',()=>{if(running){clearInterval(timer);timer=setInterval(tick,Number(speedSelect.value))}});
+document.querySelectorAll('[data-dir]').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();setDirection(b.dataset.dir)})});
+document.addEventListener('keydown',e=>{const keys={ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};if(keys[e.key]){e.preventDefault();setDirection(keys[e.key])}else if(e.code==='Space'){e.preventDefault();pause()}});
+let touchX=0,touchY=0;canvas.addEventListener('touchstart',e=>{const t=e.changedTouches[0];touchX=t.clientX;touchY=t.clientY},{passive:true});canvas.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-touchX,dy=t.clientY-touchY;if(Math.max(Math.abs(dx),Math.abs(dy))<18)return;if(Math.abs(dx)>Math.abs(dy))setDirection(dx>0?'right':'left');else setDirection(dy>0?'down':'up')},{passive:true});
+reset();
+})();
+</script>
+</body>
+</html>
